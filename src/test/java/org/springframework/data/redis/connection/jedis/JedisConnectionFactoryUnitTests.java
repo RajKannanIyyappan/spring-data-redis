@@ -20,8 +20,6 @@ import static org.mockito.Mockito.*;
 
 import redis.clients.jedis.JedisClientConfig;
 import redis.clients.jedis.JedisCluster;
-import redis.clients.jedis.JedisClusterConnectionHandler;
-import redis.clients.jedis.JedisClusterInfoCache;
 import redis.clients.jedis.JedisPoolConfig;
 
 import java.io.IOException;
@@ -29,7 +27,6 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
@@ -39,7 +36,6 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.data.redis.connection.RedisClusterConfiguration;
-import org.springframework.data.redis.connection.RedisClusterConnection;
 import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.RedisSentinelConfiguration;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
@@ -95,8 +91,7 @@ class JedisConnectionFactoryUnitTests {
 		connectionFactory = initSpyedConnectionFactory(CLUSTER_CONFIG, new JedisPoolConfig());
 		connectionFactory.afterPropertiesSet();
 
-		verify(connectionFactory, times(1)).createCluster(eq(CLUSTER_CONFIG),
-				any(GenericObjectPoolConfig.class));
+		verify(connectionFactory, times(1)).createCluster(eq(CLUSTER_CONFIG), any(GenericObjectPoolConfig.class));
 		verify(connectionFactory, never()).createRedisPool();
 	}
 
@@ -305,50 +300,6 @@ class JedisConnectionFactoryUnitTests {
 		assertThat(connectionFactory.getStandaloneConfiguration()).isNotNull();
 		assertThat(connectionFactory.getSentinelConfiguration()).isNull();
 		assertThat(connectionFactory.getClusterConfiguration()).isSameAs(configuration);
-	}
-
-	@Test // DATAREDIS-974, GH-2017
-	void shouldApplySslConfigWhenCreatingClusterClient() throws NoSuchAlgorithmException {
-
-		SSLParameters sslParameters = new SSLParameters();
-		SSLContext context = SSLContext.getDefault();
-		SSLSocketFactory socketFactory = context.getSocketFactory();
-		JedisPoolConfig poolConfig = new JedisPoolConfig();
-		HostnameVerifier hostNameVerifier = HttpsURLConnection.getDefaultHostnameVerifier();
-
-		JedisClientConfiguration configuration = JedisClientConfiguration.builder() //
-				.useSsl() //
-				.hostnameVerifier(hostNameVerifier) //
-				.sslParameters(sslParameters) //
-				.sslSocketFactory(socketFactory).and() //
-				.clientName("my-client") //
-				.connectTimeout(Duration.ofMinutes(1)) //
-				.readTimeout(Duration.ofMinutes(5)) //
-				.usePooling().poolConfig(poolConfig) //
-				.build();
-
-		connectionFactory = new JedisConnectionFactory(new RedisClusterConfiguration(), configuration);
-		connectionFactory.afterPropertiesSet();
-
-		RedisClusterConnection connection = connectionFactory.getClusterConnection();
-		assertThat(connection).isInstanceOf(JedisClusterConnection.class);
-
-		JedisCluster cluster = ((JedisClusterConnection) connection).getCluster();
-
-		JedisClusterConnectionHandler connectionHandler = (JedisClusterConnectionHandler) ReflectionTestUtils
-				.getField(cluster, "connectionHandler");
-		JedisClusterInfoCache cache = (JedisClusterInfoCache) ReflectionTestUtils.getField(connectionHandler, "cache");
-		JedisClientConfig clientConfig = (JedisClientConfig) ReflectionTestUtils.getField(cache, "clientConfig");
-
-		assertThat(clientConfig.getConnectionTimeoutMillis()).isEqualTo(60000);
-		assertThat(clientConfig.getSocketTimeoutMillis()).isEqualTo(300000);
-		assertThat(clientConfig.getPassword()).isNull();
-		assertThat(clientConfig.getClientName()).isEqualTo("my-client");
-		assertThat(clientConfig.isSsl()).isEqualTo(true);
-		assertThat(clientConfig.getSslSocketFactory()).isEqualTo(socketFactory);
-		assertThat(clientConfig.getSslParameters()).isEqualTo(sslParameters);
-		assertThat(clientConfig.getHostnameVerifier()).isEqualTo(hostNameVerifier);
-		assertThat(clientConfig.getHostAndPortMapper()).isNull();
 	}
 
 	@Test // DATAREDIS-574

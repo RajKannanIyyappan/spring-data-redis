@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.exceptions.JedisAskDataException;
-import redis.clients.jedis.exceptions.JedisClusterMaxAttemptsException;
+import redis.clients.jedis.exceptions.JedisClusterOperationException;
 import redis.clients.jedis.exceptions.JedisMovedDataException;
 
 import org.junit.jupiter.api.Test;
@@ -38,8 +38,8 @@ class JedisExceptionConverterUnitTests {
 	@Test // DATAREDIS-315
 	void shouldConvertMovedDataException() {
 
-		DataAccessException converted = converter.convert(new JedisMovedDataException("MOVED 3999 127.0.0.1:6381",
-				new HostAndPort("127.0.0.1", 6381), 3999));
+		DataAccessException converted = converter
+				.convert(new JedisMovedDataException("MOVED 3999 127.0.0.1:6381", new HostAndPort("127.0.0.1", 6381), 3999));
 
 		assertThat(converted).isInstanceOf(ClusterRedirectException.class);
 		assertThat(((ClusterRedirectException) converted).getSlot()).isEqualTo(3999);
@@ -50,8 +50,8 @@ class JedisExceptionConverterUnitTests {
 	@Test // DATAREDIS-315
 	void shouldConvertAskDataException() {
 
-		DataAccessException converted = converter.convert(new JedisAskDataException("ASK 3999 127.0.0.1:6381",
-				new HostAndPort("127.0.0.1", 6381), 3999));
+		DataAccessException converted = converter
+				.convert(new JedisAskDataException("ASK 3999 127.0.0.1:6381", new HostAndPort("127.0.0.1", 6381), 3999));
 
 		assertThat(converted).isInstanceOf(ClusterRedirectException.class);
 		assertThat(((ClusterRedirectException) converted).getSlot()).isEqualTo(3999);
@@ -63,7 +63,7 @@ class JedisExceptionConverterUnitTests {
 	void shouldConvertMaxRedirectException() {
 
 		DataAccessException converted = converter
-				.convert(new JedisClusterMaxAttemptsException("Too many redirections?"));
+				.convert(new JedisClusterOperationException("No more cluster attempts left."));
 
 		assertThat(converted).isInstanceOf(TooManyClusterRedirectionsException.class);
 	}

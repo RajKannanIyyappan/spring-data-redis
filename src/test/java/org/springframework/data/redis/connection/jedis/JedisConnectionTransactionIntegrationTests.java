@@ -22,9 +22,9 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.redis.connection.AbstractConnectionTransactionIntegrationTests;
 import org.springframework.data.redis.connection.ReturnType;
-import org.springframework.data.redis.test.condition.EnabledOnCommand;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -61,234 +61,196 @@ public class JedisConnectionTransactionIntegrationTests extends AbstractConnecti
 	// Unsupported Ops
 	@Test
 	@Disabled
-	public void testScriptLoadEvalSha() {
-	}
+	public void testScriptLoadEvalSha() {}
 
 	@Test
 	@Disabled
-	public void testEvalShaArrayStrings() {
-	}
+	public void testEvalShaArrayStrings() {}
 
 	@Test
 	@Disabled
-	public void testEvalShaArrayBytes() {
-	}
+	public void testEvalShaArrayBytes() {}
 
 	@Test
 	@Disabled
-	public void testEvalShaNotFound() {
-	}
+	public void testEvalShaNotFound() {}
 
 	@Test
 	public void testEvalShaArrayError() {
-		assertThatExceptionOfType(UnsupportedOperationException.class)
+		assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
 				.isThrownBy(() -> connection.evalSha("notasha", ReturnType.MULTI, 1, "key1", "arg1"));
 	}
 
 	@Test
 	public void testEvalArrayScriptError() {
-		assertThatExceptionOfType(UnsupportedOperationException.class)
+		assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
 				.isThrownBy(() -> connection.eval("return {1,2", ReturnType.MULTI, 1, "foo", "bar"));
 	}
 
 	@Test
 	@Disabled
-	public void testEvalReturnString() {
-	}
+	public void testEvalReturnString() {}
 
 	@Test
 	@Disabled
-	public void testEvalReturnNumber() {
-	}
+	public void testEvalReturnNumber() {}
 
 	@Test
 	@Disabled
-	public void testEvalReturnSingleOK() {
-	}
+	public void testEvalReturnSingleOK() {}
 
 	@Test
 	@Disabled
-	public void testEvalReturnSingleError() {
-	}
+	public void testEvalReturnSingleError() {}
 
 	@Test
 	@Disabled
-	public void testEvalReturnFalse() {
-	}
+	public void testEvalReturnFalse() {}
 
 	@Test
 	@Disabled
-	public void testEvalReturnTrue() {
-	}
+	public void testEvalReturnTrue() {}
 
 	@Test
 	@Disabled
-	public void testEvalReturnArrayStrings() {
-	}
+	public void testEvalReturnArrayStrings() {}
 
 	@Test
 	@Disabled
-	public void testEvalReturnArrayNumbers() {
-	}
+	public void testEvalReturnArrayNumbers() {}
 
 	@Test
 	@Disabled
-	public void testEvalReturnArrayOKs() {
-	}
+	public void testEvalReturnArrayOKs() {}
 
 	@Test
 	@Disabled
-	public void testEvalReturnArrayFalses() {
-	}
+	public void testEvalReturnArrayFalses() {}
 
 	@Test
 	@Disabled
-	public void testEvalReturnArrayTrues() {
-	}
+	public void testEvalReturnArrayTrues() {}
 
 	@Test
 	@Disabled
-	public void testScriptExists() {
-	}
+	public void testScriptExists() {}
 
 	@Test
 	@Disabled
-	public void testScriptKill() {
-	}
+	public void testScriptKill() {}
 
 	@Test
 	@Disabled
-	public void testScriptFlush() {
-	}
+	public void testScriptFlush() {}
 
 	@Test
 	@Disabled
-	public void testInfoBySection() {
-	}
+	public void testInfoBySection() {}
 
 	@Test
 	@Disabled
-	public void testRestoreBadData() {
-	}
+	public void testRestoreBadData() {}
 
 	@Test
 	@Disabled
-	public void testRestoreExistingKey() {
-	}
+	public void testRestoreExistingKey() {}
 
 	@Test // DATAREDIS-269
 	@Disabled
-	public void clientSetNameWorksCorrectly() {
-	}
+	public void clientSetNameWorksCorrectly() {}
 
 	@Test
 	@Override
 	// DATAREDIS-268
 	public void testListClientsContainsAtLeastOneElement() {
-		assertThatExceptionOfType(UnsupportedOperationException.class)
+		assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
 				.isThrownBy(super::testListClientsContainsAtLeastOneElement);
 	}
 
-	@Test // GH-1711
-	@EnabledOnCommand("XADD")
-	@Override
-	public void xReadShouldReadMessage() {
-		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(super::xReadShouldReadMessage);
-	}
-
-	@Test // GH-1711
-	@EnabledOnCommand("XADD")
-	@Override
-	public void xReadGroupShouldReadMessage() {
-		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(super::xReadGroupShouldReadMessage);
-	}
-
-	@Test // GH-1711
-	@EnabledOnCommand("XADD")
-	@Override
-	public void xGroupCreateShouldWorkWithAndWithoutExistingStream() {
-		assertThatExceptionOfType(UnsupportedOperationException.class)
-				.isThrownBy(super::xGroupCreateShouldWorkWithAndWithoutExistingStream);
-	}
-
-	@Test // GH-1711
-	@EnabledOnCommand("XADD")
-	@Override
-	public void xPendingShouldLoadPendingMessages() {
-		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(super::xPendingShouldLoadPendingMessages);
-	}
-
-	@Test // GH-1711
-	@EnabledOnCommand("XADD")
-	@Override
-	public void xPendingShouldWorkWithBoundedRange() {
-		assertThatExceptionOfType(UnsupportedOperationException.class)
-				.isThrownBy(super::xPendingShouldWorkWithBoundedRange);
-	}
-
-	@Test // GH-1711
-	@EnabledOnCommand("XADD")
-	@Override
-	public void xPendingShouldLoadPendingMessagesForConsumer() {
-		assertThatExceptionOfType(UnsupportedOperationException.class)
-				.isThrownBy(super::xPendingShouldLoadPendingMessagesForConsumer);
-	}
-
-	@Test // GH-1711
-	@EnabledOnCommand("XADD")
-	@Override
-	public void xPendingShouldLoadPendingMessagesForNonExistingConsumer() {
-		assertThatExceptionOfType(UnsupportedOperationException.class)
-				.isThrownBy(super::xPendingShouldLoadPendingMessagesForNonExistingConsumer);
-	}
-
-	@Test // GH-1711
-	@EnabledOnCommand("XADD")
-	@Override
-	public void xinfo() {
-		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(super::xinfo);
-	}
+	@Test // DATAREDIS-296
+	@Disabled
+	public void testExecWithoutMulti() {}
 
 	@Test
-	@EnabledOnCommand("XADD")
 	@Override
-	public void xinfoNoGroup() {
-		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(super::xinfoNoGroup);
-	}
+	@Disabled
+	public void testMultiExec() {}
 
-	@Test // GH-1711
-	@EnabledOnCommand("XADD")
+	@Test
 	@Override
-	public void xinfoGroups() {
-		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(super::xinfoGroups);
-	}
+	@Disabled
+	public void testMultiDiscard() {}
 
-	@Test // GH-1711
-	@EnabledOnCommand("XADD")
+	@Test
 	@Override
-	public void xinfoGroupsNoGroup() {
-		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(super::xinfoGroupsNoGroup);
-	}
+	@Disabled
+	public void testErrorInTx() {}
 
-	@Test // GH-1711
-	@EnabledOnCommand("XADD")
+	@Test
 	@Override
-	public void xinfoGroupsNoConsumer() {
-		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(super::xinfoGroupsNoConsumer);
-	}
+	@Disabled
+	public void testWatch() {}
 
-	@Test // GH-1711
-	@EnabledOnCommand("XADD")
+	@Test
 	@Override
-	public void xinfoConsumers() {
-		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(super::xinfoConsumers);
-	}
+	@Disabled
+	public void testUnwatch() {}
 
-	@Test // GH-1711
-	@EnabledOnCommand("XADD")
+	@Test
 	@Override
-	public void xinfoConsumersNoConsumer() {
-		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(super::xinfoConsumersNoConsumer);
-	}
+	@Disabled
+	public void testMultiAlreadyInTx() {}
+
+	@Test
+	@Override
+	@Disabled
+	public void testPingPong() {}
+
+	@Test
+	@Override
+	@Disabled
+	public void testFlushDb() {}
+
+	@Override
+	@Disabled
+	public void testEcho() {}
+
+	@Override
+	@Disabled
+	public void testInfo() {}
+
+	@Override
+	@Disabled
+	public void testMove() {}
+
+	@Test
+	@Override
+	@Disabled
+	public void testLastSave() {}
+
+	@Test
+	@Override
+	@Disabled
+	public void testGetTimeShouldRequestServerTime() {}
+
+	@Test
+	@Override
+	@Disabled
+	public void testGetTimeShouldRequestServerTimeAsMicros() {}
+
+	@Test
+	@Override
+	@Disabled
+	public void testDbSize() {}
+
+	@Test
+	@Override
+	@Disabled
+	public void testSelect() {}
+
+	@Test
+	@Override
+	@Disabled("Parameter ordering in zrevrangeByLex(byte[] key, byte[] max, byte[] min) is swapped so transactions use inverse parameter order")
+	public void zRevRangeByLexTest() {}
 
 }

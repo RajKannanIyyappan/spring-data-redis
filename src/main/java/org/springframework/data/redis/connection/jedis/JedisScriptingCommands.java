@@ -15,10 +15,11 @@
  */
 package org.springframework.data.redis.connection.jedis;
 
-import redis.clients.jedis.BinaryJedis;
+import redis.clients.jedis.Jedis;
 
 import java.util.List;
 
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.redis.connection.RedisScriptingCommands;
 import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.util.Assert;
@@ -40,7 +41,7 @@ class JedisScriptingCommands implements RedisScriptingCommands {
 
 		assertDirectMode();
 
-		connection.invoke().just(BinaryJedis::scriptFlush);
+		connection.invoke().just(Jedis::scriptFlush);
 	}
 
 	@Override
@@ -48,7 +49,7 @@ class JedisScriptingCommands implements RedisScriptingCommands {
 
 		assertDirectMode();
 
-		connection.invoke().just(BinaryJedis::scriptKill);
+		connection.invoke().just(Jedis::scriptKill);
 	}
 
 	@Override
@@ -78,8 +79,8 @@ class JedisScriptingCommands implements RedisScriptingCommands {
 		assertDirectMode();
 
 		JedisScriptReturnConverter converter = new JedisScriptReturnConverter(returnType);
-		return (T) connection.invoke().from(it -> it.eval(script, JedisConverters.toBytes(numKeys), keysAndArgs))
-				.getOrElse(converter, () -> converter.convert(null));
+		return (T) connection.invoke().from(it -> it.eval(script, numKeys, keysAndArgs)).getOrElse(converter,
+				() -> converter.convert(null));
 	}
 
 	@Override
@@ -101,7 +102,7 @@ class JedisScriptingCommands implements RedisScriptingCommands {
 
 	private void assertDirectMode() {
 		if (connection.isQueueing() || connection.isPipelined()) {
-			throw new UnsupportedOperationException("Scripting commands not supported in pipelining/transaction mode");
+			throw new InvalidDataAccessApiUsageException("Scripting commands not supported in pipelining/transaction mode");
 		}
 	}
 

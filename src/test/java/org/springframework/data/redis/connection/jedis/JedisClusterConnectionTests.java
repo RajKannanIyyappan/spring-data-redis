@@ -27,10 +27,10 @@ import static org.springframework.data.redis.connection.RedisListCommands.*;
 import static org.springframework.data.redis.connection.RedisZSetCommands.*;
 import static org.springframework.data.redis.core.ScanOptions.*;
 
+import redis.clients.jedis.ConnectionPool;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
-import redis.clients.jedis.JedisPool;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -121,8 +121,8 @@ public class JedisClusterConnectionTests implements ClusterConnectionTests {
 	@BeforeEach
 	void tearDown() throws IOException {
 
-		for (JedisPool pool : nativeConnection.getClusterNodes().values()) {
-			try (Jedis jedis = pool.getResource()) {
+		for (ConnectionPool pool : nativeConnection.getClusterNodes().values()) {
+			try (Jedis jedis = new Jedis(pool.getResource())) {
 				jedis.flushAll();
 			} catch (Exception e) {
 				// ignore this one since we cannot remove data from replicas
@@ -372,7 +372,8 @@ public class JedisClusterConnectionTests implements ClusterConnectionTests {
 
 	@Test // DATAREDIS-315
 	public void echoShouldReturnInputCorrectly() {
-		assertThat(clusterConnection.echo(VALUE_1_BYTES)).isEqualTo(VALUE_1_BYTES);
+		assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
+				.isThrownBy(() -> clusterConnection.echo(VALUE_1_BYTES));
 	}
 
 	@Test // DATAREDIS-315
@@ -1367,7 +1368,7 @@ public class JedisClusterConnectionTests implements ClusterConnectionTests {
 
 	@Test // DATAREDIS-315
 	public void moveShouldNotBeSupported() {
-		assertThatExceptionOfType(UnsupportedOperationException.class)
+		assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
 				.isThrownBy(() -> clusterConnection.move(KEY_1_BYTES, 3));
 	}
 
@@ -1986,7 +1987,7 @@ public class JedisClusterConnectionTests implements ClusterConnectionTests {
 		clusterConnection.set(KEY_1_BYTES, VALUE_1_BYTES, Expiration.milliseconds(500), SetOption.upsert());
 
 		assertThat(nativeConnection.exists(KEY_1_BYTES)).isTrue();
-		assertThat(nativeConnection.pttl(KEY_1).doubleValue()).isCloseTo(500d, offset(499d));
+		assertThat(nativeConnection.pttl(KEY_1)).isCloseTo(500L, offset(499L));
 	}
 
 	@Test // DATAREDIS-316
@@ -2870,7 +2871,8 @@ public class JedisClusterConnectionTests implements ClusterConnectionTests {
 	void lPos() {
 
 		nativeConnection.rpush(KEY_1, "a", "b", "c", "1", "2", "3", "c", "c");
-		List<Long> result = clusterConnection.listCommands().lPos(KEY_1_BYTES, "c".getBytes(StandardCharsets.UTF_8), null, null);
+		List<Long> result = clusterConnection.listCommands().lPos(KEY_1_BYTES, "c".getBytes(StandardCharsets.UTF_8), null,
+				null);
 
 		assertThat(result).containsOnly(2L);
 	}
@@ -2880,7 +2882,8 @@ public class JedisClusterConnectionTests implements ClusterConnectionTests {
 	void lPosRank() {
 
 		nativeConnection.rpush(KEY_1, "a", "b", "c", "1", "2", "3", "c", "c");
-		List<Long> result = clusterConnection.listCommands().lPos(KEY_1_BYTES, "c".getBytes(StandardCharsets.UTF_8), 2, null);
+		List<Long> result = clusterConnection.listCommands().lPos(KEY_1_BYTES, "c".getBytes(StandardCharsets.UTF_8), 2,
+				null);
 
 		assertThat(result).containsExactly(6L);
 	}
@@ -2890,7 +2893,8 @@ public class JedisClusterConnectionTests implements ClusterConnectionTests {
 	void lPosNegativeRank() {
 
 		nativeConnection.rpush(KEY_1, "a", "b", "c", "1", "2", "3", "c", "c");
-		List<Long> result = clusterConnection.listCommands().lPos(KEY_1_BYTES, "c".getBytes(StandardCharsets.UTF_8), -1, null);
+		List<Long> result = clusterConnection.listCommands().lPos(KEY_1_BYTES, "c".getBytes(StandardCharsets.UTF_8), -1,
+				null);
 
 		assertThat(result).containsExactly(7L);
 	}
@@ -2900,7 +2904,8 @@ public class JedisClusterConnectionTests implements ClusterConnectionTests {
 	void lPosCount() {
 
 		nativeConnection.rpush(KEY_1, "a", "b", "c", "1", "2", "3", "c", "c");
-		List<Long> result = clusterConnection.listCommands().lPos(KEY_1_BYTES, "c".getBytes(StandardCharsets.UTF_8), null, 2);
+		List<Long> result = clusterConnection.listCommands().lPos(KEY_1_BYTES, "c".getBytes(StandardCharsets.UTF_8), null,
+				2);
 
 		assertThat(result).containsExactly(2L, 6L);
 	}
@@ -2920,7 +2925,8 @@ public class JedisClusterConnectionTests implements ClusterConnectionTests {
 	void lPosCountZero() {
 
 		nativeConnection.rpush(KEY_1, "a", "b", "c", "1", "2", "3", "c", "c");
-		List<Long> result = clusterConnection.listCommands().lPos(KEY_1_BYTES, "c".getBytes(StandardCharsets.UTF_8), null, 0);
+		List<Long> result = clusterConnection.listCommands().lPos(KEY_1_BYTES, "c".getBytes(StandardCharsets.UTF_8), null,
+				0);
 
 		assertThat(result).containsExactly(2L, 6L, 7L);
 	}
@@ -2930,7 +2936,8 @@ public class JedisClusterConnectionTests implements ClusterConnectionTests {
 	void lPosNonExisting() {
 
 		nativeConnection.rpush(KEY_1, "a", "b", "c", "1", "2", "3", "c", "c");
-		List<Long> result = clusterConnection.listCommands().lPos(KEY_1_BYTES, "x".getBytes(StandardCharsets.UTF_8), null, null);
+		List<Long> result = clusterConnection.listCommands().lPos(KEY_1_BYTES, "x".getBytes(StandardCharsets.UTF_8), null,
+				null);
 
 		assertThat(result).isEmpty();
 	}

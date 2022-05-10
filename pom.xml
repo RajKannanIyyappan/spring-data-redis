@@ -5,7 +5,7 @@
 
 	<groupId>org.springframework.data</groupId>
 	<artifactId>spring-data-redis</artifactId>
-	<version>3.0.0-SNAPSHOT</version>
+	<version>3.0.0-GH-2212-SNAPSHOT</version>
 
 	<name>Spring Data Redis</name>
 	<description>Spring Data module for Redis</description>
@@ -24,7 +24,7 @@
 		<xstream>1.4.19</xstream>
 		<pool>2.11.1</pool>
 		<lettuce>6.1.8.RELEASE</lettuce>
-		<jedis>3.8.0</jedis>
+		<jedis>4.2.0</jedis>
 		<multithreadedtc>1.01</multithreadedtc>
 		<netty>4.1.72.Final</netty>
 		<java-module-name>spring.data.redis</java-module-name>

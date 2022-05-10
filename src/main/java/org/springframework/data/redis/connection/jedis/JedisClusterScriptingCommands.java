@@ -15,7 +15,7 @@
  */
 package org.springframework.data.redis.connection.jedis;
 
-import redis.clients.jedis.BinaryJedis;
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 
 import java.util.List;
@@ -43,8 +43,8 @@ class JedisClusterScriptingCommands implements RedisScriptingCommands {
 	public void scriptFlush() {
 
 		try {
-			connection.getClusterCommandExecutor().executeCommandOnAllNodes(
-					(JedisClusterConnection.JedisClusterCommandCallback<String>) BinaryJedis::scriptFlush);
+			connection.getClusterCommandExecutor()
+					.executeCommandOnAllNodes((JedisClusterConnection.JedisClusterCommandCallback<String>) Jedis::scriptFlush);
 		} catch (Exception ex) {
 			throw convertJedisAccessException(ex);
 		}
@@ -54,8 +54,8 @@ class JedisClusterScriptingCommands implements RedisScriptingCommands {
 	public void scriptKill() {
 
 		try {
-			connection.getClusterCommandExecutor().executeCommandOnAllNodes(
-					(JedisClusterConnection.JedisClusterCommandCallback<String>) BinaryJedis::scriptKill);
+			connection.getClusterCommandExecutor()
+					.executeCommandOnAllNodes((JedisClusterConnection.JedisClusterCommandCallback<String>) Jedis::scriptKill);
 		} catch (Exception ex) {
 			throw convertJedisAccessException(ex);
 		}
@@ -89,8 +89,7 @@ class JedisClusterScriptingCommands implements RedisScriptingCommands {
 		Assert.notNull(script, "Script must not be null!");
 
 		try {
-			return (T) new JedisScriptReturnConverter(returnType)
-					.convert(getCluster().eval(script, JedisConverters.toBytes(numKeys), keysAndArgs));
+			return (T) new JedisScriptReturnConverter(returnType).convert(getCluster().eval(script, numKeys, keysAndArgs));
 		} catch (Exception ex) {
 			throw convertJedisAccessException(ex);
 		}

@@ -16,8 +16,12 @@
 package org.springframework.data.redis.connection.jedis;
 
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.MultiKeyPipelineBase;
+import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Queable;
 import redis.clients.jedis.Response;
+import redis.clients.jedis.Transaction;
+import redis.clients.jedis.commands.DatabasePipelineCommands;
+import redis.clients.jedis.commands.PipelineBinaryCommands;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,7 +32,9 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.redis.connection.convert.Converters;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -77,7 +83,7 @@ class JedisInvoker {
 		Assert.notNull(function, "ConnectionFunction must not be null!");
 
 		return synchronizer.invoke(function::apply, it -> {
-			throw new UnsupportedOperationException("Operation not supported in pipelining/transaction mode");
+			throw new InvalidDataAccessApiUsageException("Operation not supported by Jedis in pipelining/transaction mode");
 		}, Converters.identityConverter(), () -> null);
 	}
 
@@ -226,7 +232,7 @@ class JedisInvoker {
 		Assert.notNull(function, "ConnectionFunction must not be null!");
 
 		return from(function, connection -> {
-			throw new UnsupportedOperationException("Operation not supported in pipelining/transaction mode");
+			throw new InvalidDataAccessApiUsageException("Operation not supported in pipelining/transaction mode");
 		});
 	}
 
@@ -374,7 +380,7 @@ class JedisInvoker {
 		Assert.notNull(function, "ConnectionFunction must not be null!");
 
 		return fromMany(function, connection -> {
-			throw new UnsupportedOperationException("Operation not supported in pipelining/transaction mode");
+			throw new InvalidDataAccessApiUsageException("Operation not supported in pipelining/transaction mode");
 		});
 	}
 
@@ -762,7 +768,7 @@ class JedisInvoker {
 	}
 
 	/**
-	 * A function accepting {@link MultiKeyPipelineBase} with 0 arguments.
+	 * A function accepting {@link ResponseCommands} with 0 arguments.
 	 *
 	 * @param <R>
 	 */
@@ -774,11 +780,11 @@ class JedisInvoker {
 		 *
 		 * @param connection the connection in use. Never {@literal null}.
 		 */
-		Response<R> apply(MultiKeyPipelineBase connection);
+		Response<R> apply(ResponseCommands connection);
 	}
 
 	/**
-	 * A function accepting {@link MultiKeyPipelineBase} with 1 argument.
+	 * A function accepting {@link ResponseCommands} with 1 argument.
 	 *
 	 * @param <T1>
 	 * @param <R>
@@ -792,11 +798,11 @@ class JedisInvoker {
 		 * @param connection the connection in use. Never {@literal null}.
 		 * @param t1 first argument.
 		 */
-		Response<R> apply(MultiKeyPipelineBase connection, T1 t1);
+		Response<R> apply(ResponseCommands connection, T1 t1);
 	}
 
 	/**
-	 * A function accepting {@link MultiKeyPipelineBase} with 2 arguments.
+	 * A function accepting {@link ResponseCommands} with 2 arguments.
 	 *
 	 * @param <T1>
 	 * @param <T2>
@@ -812,11 +818,11 @@ class JedisInvoker {
 		 * @param t1 first argument.
 		 * @param t2 second argument.
 		 */
-		Response<R> apply(MultiKeyPipelineBase connection, T1 t1, T2 t2);
+		Response<R> apply(ResponseCommands connection, T1 t1, T2 t2);
 	}
 
 	/**
-	 * A function accepting {@link MultiKeyPipelineBase} with 3 arguments.
+	 * A function accepting {@link ResponseCommands} with 3 arguments.
 	 *
 	 * @param <T1>
 	 * @param <T2>
@@ -834,11 +840,11 @@ class JedisInvoker {
 		 * @param t2 second argument.
 		 * @param t3 third argument.
 		 */
-		Response<R> apply(MultiKeyPipelineBase connection, T1 t1, T2 t2, T3 t3);
+		Response<R> apply(ResponseCommands connection, T1 t1, T2 t2, T3 t3);
 	}
 
 	/**
-	 * A function accepting {@link MultiKeyPipelineBase} with 4 arguments.
+	 * A function accepting {@link ResponseCommands} with 4 arguments.
 	 *
 	 * @param <T1>
 	 * @param <T2>
@@ -858,11 +864,11 @@ class JedisInvoker {
 		 * @param t3 third argument.
 		 * @param t4 fourth argument.
 		 */
-		Response<R> apply(MultiKeyPipelineBase connection, T1 t1, T2 t2, T3 t3, T4 t4);
+		Response<R> apply(ResponseCommands connection, T1 t1, T2 t2, T3 t3, T4 t4);
 	}
 
 	/**
-	 * A function accepting {@link MultiKeyPipelineBase} with 5 arguments.
+	 * A function accepting {@link ResponseCommands} with 5 arguments.
 	 *
 	 * @param <T1>
 	 * @param <T2>
@@ -884,11 +890,11 @@ class JedisInvoker {
 		 * @param t4 fourth argument.
 		 * @param t5 fifth argument.
 		 */
-		Response<R> apply(MultiKeyPipelineBase connection, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5);
+		Response<R> apply(ResponseCommands connection, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5);
 	}
 
 	/**
-	 * A function accepting {@link MultiKeyPipelineBase} with 6 arguments.
+	 * A function accepting {@link ResponseCommands} with 6 arguments.
 	 *
 	 * @param <T1>
 	 * @param <T2>
@@ -912,17 +918,17 @@ class JedisInvoker {
 		 * @param t5 fifth argument.
 		 * @param t6 sixth argument.
 		 */
-		Response<R> apply(MultiKeyPipelineBase connection, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6);
+		Response<R> apply(ResponseCommands connection, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6);
 	}
 
 	static class DefaultSingleInvocationSpec<S> implements SingleInvocationSpec<S> {
 
 		private final Function<Jedis, S> parentFunction;
-		private final Function<MultiKeyPipelineBase, Response<S>> parentPipelineFunction;
+		private final Function<ResponseCommands, Response<S>> parentPipelineFunction;
 		private final Synchronizer synchronizer;
 
 		DefaultSingleInvocationSpec(Function<Jedis, S> parentFunction,
-				Function<MultiKeyPipelineBase, Response<S>> parentPipelineFunction, Synchronizer synchronizer) {
+				Function<ResponseCommands, Response<S>> parentPipelineFunction, Synchronizer synchronizer) {
 
 			this.parentFunction = parentFunction;
 			this.parentPipelineFunction = parentPipelineFunction;
@@ -950,11 +956,11 @@ class JedisInvoker {
 	static class DefaultManyInvocationSpec<S> implements ManyInvocationSpec<S> {
 
 		private final Function<Jedis, Collection<S>> parentFunction;
-		private final Function<MultiKeyPipelineBase, Response<Collection<S>>> parentPipelineFunction;
+		private final Function<ResponseCommands, Response<Collection<S>>> parentPipelineFunction;
 		private final Synchronizer synchronizer;
 
 		DefaultManyInvocationSpec(Function<Jedis, ? extends Collection<S>> parentFunction,
-				Function<MultiKeyPipelineBase, Response<? extends Collection<S>>> parentPipelineFunction,
+				Function<ResponseCommands, Response<? extends Collection<S>>> parentPipelineFunction,
 				Synchronizer synchronizer) {
 
 			this.parentFunction = (Function) parentFunction;
@@ -1013,24 +1019,42 @@ class JedisInvoker {
 
 		@Nullable
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		default <I, T> T invoke(Function<Jedis, I> callFunction,
-				Function<MultiKeyPipelineBase, Response<I>> pipelineFunction) {
-			return (T) doInvoke((Function) callFunction, (Function) pipelineFunction, Converters.identityConverter(), () -> null);
+		default <I, T> T invoke(Function<Jedis, I> callFunction, Function<ResponseCommands, Response<I>> pipelineFunction) {
+			return (T) doInvoke((Function) callFunction, (Function) pipelineFunction, Converters.identityConverter(),
+					() -> null);
 		}
 
 		@Nullable
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		default <I, T> T invoke(Function<Jedis, I> callFunction,
-				Function<MultiKeyPipelineBase, Response<I>> pipelineFunction, Converter<I, T> converter,
-				Supplier<T> nullDefault) {
+		default <I, T> T invoke(Function<Jedis, I> callFunction, Function<ResponseCommands, Response<I>> pipelineFunction,
+				Converter<I, T> converter, Supplier<T> nullDefault) {
 
 			return (T) doInvoke((Function) callFunction, (Function) pipelineFunction, (Converter<Object, Object>) converter,
 					(Supplier<Object>) nullDefault);
 		}
 
 		@Nullable
-		Object doInvoke(Function<Jedis, Object> callFunction,
-				Function<MultiKeyPipelineBase, Response<Object>> pipelineFunction, Converter<Object, Object> converter,
-				Supplier<Object> nullDefault);
+		Object doInvoke(Function<Jedis, Object> callFunction, Function<ResponseCommands, Response<Object>> pipelineFunction,
+				Converter<Object, Object> converter, Supplier<Object> nullDefault);
 	}
+
+	interface ResponseCommands extends PipelineBinaryCommands, DatabasePipelineCommands {
+
+		Response<Long> publish(String channel, String message);
+	}
+
+	/**
+	 * Create a proxy to invoke methods dynamically on {@link Pipeline} or {@link Transaction} as those share many
+	 * commands that are not defined on a common super-type.
+	 *
+	 * @param pipelineOrTransaction
+	 * @return
+	 */
+	static ResponseCommands createCommands(Queable pipelineOrTransaction) {
+
+		ProxyFactory proxyFactory = new ProxyFactory(pipelineOrTransaction);
+		proxyFactory.addInterface(ResponseCommands.class);
+		return (ResponseCommands) proxyFactory.getProxy(JedisInvoker.class.getClassLoader());
+	}
+
 }
